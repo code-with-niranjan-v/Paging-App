@@ -3,16 +3,18 @@ package com.example.pagingapp.model
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.pagingapp.paths.Constants.TABLE_NAME
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Entity(tableName = "unsplash_image_table")
 @Serializable
+@Entity(tableName = TABLE_NAME)
 data class UnsplashImageData(
     @PrimaryKey(autoGenerate = false)
     val id:String,
     @Embedded
-    val url: Urls,
+    val urls: Urls,
     @Embedded
     val user: User,
     val likes:Int
@@ -20,14 +22,15 @@ data class UnsplashImageData(
 
 @Serializable
 data class User(
-    @SerializedName("links")
+    @SerialName("links")
     @Embedded
     val userLinks: UserLinks,
-    val username:String
+    val username: String
 )
 
 @Serializable
 data class Urls(
+    @SerialName("regular")
     val regular:String
 )
 

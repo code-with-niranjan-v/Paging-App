@@ -11,6 +11,10 @@ android {
     namespace = "com.example.pagingapp"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.example.pagingapp"
         minSdk = 32
@@ -19,6 +23,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String","API_KEY","\"${project.findProperty("API_KEY")}\"")
+
     }
 
     buildTypes {
