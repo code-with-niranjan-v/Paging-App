@@ -15,7 +15,7 @@ interface UnsplashImageDao {
     fun getAllImages():PagingSource<Int,UnsplashImageData>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun addImages(images:UnsplashImageData)
+    fun addImages(images:List<UnsplashImageData>)
 
     @Query("delete from unsplash_image_table  ")
     fun deleteAllImages()

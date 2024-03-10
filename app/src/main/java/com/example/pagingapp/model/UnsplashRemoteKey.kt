@@ -8,6 +8,6 @@ import com.example.pagingapp.paths.Constants.REMOTE_KEY_TABLE
 data class UnsplashRemoteKey(
     @PrimaryKey(autoGenerate = false)
     val id:String,
-    val prevPage:Int,
-    val nextPage:Int
+    val prevPage:Int?,
+    val nextPage:Int?
 )
