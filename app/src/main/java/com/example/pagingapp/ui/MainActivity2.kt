@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import androidx.paging.ExperimentalPagingApi
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
@@ -78,6 +81,13 @@ fun UserScreen(userPages:LazyPagingItems<User>) {
             userData?.let { UserItems(userData = it) }
 
         }
+        when (userPages.loadState.append) {
+            is LoadState.NotLoading -> Unit
+            LoadState.Loading -> {
+                item { LoadingItem() }
+            }
+            else -> {}
+        }
     }
 }
 
@@ -114,4 +124,9 @@ fun UserItems(
         Text(text = userData.firstName, fontSize = 18.sp,modifier = Modifier.padding(horizontal = 12.dp))
     }
 
+}
+
+@Composable
+fun LoadingItem() {
+    CircularProgressIndicator(modifier = Modifier.size(50.dp))
 }
