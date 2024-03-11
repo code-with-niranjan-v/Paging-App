@@ -1,5 +1,6 @@
 package com.example.pagingapp.data.paging
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -15,19 +16,21 @@ import androidx.room.withTransaction
 class UnsplashRemoteMediator @Inject constructor(
     private val unsplashDatabase: UnsplashDatabase,
     private val unsplashImageApi: UnsplashImageApi
-):RemoteMediator<Int,UnsplashImageData>(){
+) : RemoteMediator<Int, UnsplashImageData>() {
 
     private val unsplashImageDao = unsplashDatabase.getUnsplashImageDao()
     private val unsplashRemoteKeyDao = unsplashDatabase.getUnsplashRemoteKeyDao()
+
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, UnsplashImageData>
     ): MediatorResult {
-        return try{
-            val currentPage = when(loadType){
-                LoadType.REFRESH ->{
-                    val remoteKey = getRemoteKeyClosestToCurrentPosition(state)
-                    remoteKey?.nextPage?.minus(1) ?: 1
+        return try {
+            val currentPage = when (loadType) {
+                LoadType.REFRESH -> {
+                    // When refreshing, use the highest page number to get the latest data
+                    val remoteKeys = getRemoteKeyForFirstItem(state)
+                    remoteKeys?.nextPage?.minus(1) ?: 1
                 }
                 LoadType.PREPEND -> {
                     val remoteKeys = getRemoteKeyForFirstItem(state)
@@ -45,7 +48,6 @@ class UnsplashRemoteMediator @Inject constructor(
                         )
                     nextPage
                 }
-
             }
 
             val response = unsplashImageApi.getAllImages(page = currentPage, perPage = ITEMS_PER_PAGE)
@@ -54,11 +56,13 @@ class UnsplashRemoteMediator @Inject constructor(
             val prevPage = if (currentPage == 1) null else currentPage - 1
             val nextPage = if (endOfPaginationReached) null else currentPage + 1
 
-            unsplashDatabase.withTransaction{
-                if (loadType == LoadType.REFRESH) {
+            unsplashDatabase.withTransaction {
+                if (loadType == LoadType.APPEND) {
+                    // Delete old data only when appending to avoid losing all data
                     unsplashImageDao.deleteAllImages()
                     unsplashRemoteKeyDao.deleteAllRemoteKeys()
                 }
+
                 val keys = response.map { unsplashImage ->
                     UnsplashRemoteKey(
                         id = unsplashImage.id,
@@ -67,11 +71,12 @@ class UnsplashRemoteMediator @Inject constructor(
                     )
                 }
                 unsplashRemoteKeyDao.insertRemoteKeys(keys)
-                unsplashImageDao.addImages(response)
+                unsplashImageDao.addImages(images = response)
             }
+
             MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
-        }catch (e:Exception){
-            return MediatorResult.Error(e)
+        } catch (e: Exception) {
+            MediatorResult.Error(e)
         }
     }
 
@@ -85,6 +90,15 @@ class UnsplashRemoteMediator @Inject constructor(
         }
     }
 
+    private suspend fun getRemoteKeyForFirstItem(
+        state: PagingState<Int, UnsplashImageData>
+    ): UnsplashRemoteKey? {
+        return state.pages.firstOrNull { it.data.isNotEmpty() }?.data?.firstOrNull()
+            ?.let { unsplashImage ->
+                unsplashRemoteKeyDao.getRemoteKeys(id = unsplashImage.id)
+            }
+    }
+
     private suspend fun getRemoteKeyForLastItem(
         state: PagingState<Int, UnsplashImageData>
     ): UnsplashRemoteKey? {
@@ -93,17 +107,6 @@ class UnsplashRemoteMediator @Inject constructor(
                 unsplashRemoteKeyDao.getRemoteKeys(id = unsplashImage.id)
             }
     }
-
-    private suspend fun getRemoteKeyForFirstItem(
-        state: PagingState<Int, UnsplashImageData>
-    ): UnsplashRemoteKey? {
-        return state.pages.firstOrNull() { it.data.isNotEmpty() }?.data?.firstOrNull()
-            ?.let { unsplashImage ->
-                unsplashRemoteKeyDao.getRemoteKeys(id = unsplashImage.id)
-            }
-    }
-
-
 
 
 }

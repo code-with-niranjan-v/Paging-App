@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.pagingapp.model.UnsplashImageData
 import com.example.pagingapp.model.UnsplashRemoteKey
+import com.example.pagingapp.paths.Constants.REMOTE_KEY_TABLE
 
 @Dao
 interface UnsplashRemoteKeyDao {
